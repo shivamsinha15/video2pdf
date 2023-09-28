@@ -6,6 +6,7 @@ import shutil
 import img2pdf
 import glob
 import argparse
+import re
 
 # Define constants
 
@@ -27,8 +28,8 @@ MIN_PERCENT = 0.2
 MAX_PERCENT = 0.6
 
 
-def get_frames(video_path):
-    '''A fucntion to return the frames from a video located at video_path
+def get_frames(video_path, start_time=0):
+    '''A function to return the frames from a video located at video_path
     this function skips frames as defined in FRAME_RATE'''
 
     # open a pointer to the video file initialize the width and height of the frame
@@ -37,7 +38,7 @@ def get_frames(video_path):
         raise Exception(f'unable to open file {video_path}')
 
     total_frames = vs.get(cv2.CAP_PROP_FRAME_COUNT)
-    frame_time = 0
+    frame_time = start_time
     frame_count = 0
     print("total_frames: ", total_frames)
     print("FRAME_RATE", FRAME_RATE)
@@ -60,7 +61,6 @@ def get_frames(video_path):
 
     vs.release()
 
-
 def detect_unique_screenshots(video_path, output_folder_screenshot_path, course_request_id):
     ''''''
     # Initialize fgbg a Background object with Parameters
@@ -76,7 +76,24 @@ def detect_unique_screenshots(video_path, output_folder_screenshot_path, course_
     (W, H) = (None, None)
 
     screenshoots_count = 0
-    for frame_count, frame_time, frame in get_frames(video_path):
+
+    # Find the latest screenshot and extract the frame time from its filename
+    screenshots = sorted(glob.glob(f"{output_folder_screenshot_path}/*.png"))
+    if screenshots:
+        latest_screenshot = screenshots[-1]
+        match = re.search(r'_(\d{3})_(\d+)\.png$', latest_screenshot)
+        if match:
+            screenshoots_count = int(match.group(1)) + 1
+            start_frame_time = int(match.group(2))
+        else:
+            screenshoots_count = 0
+            start_frame_time = 0
+    else:
+        screenshoots_count = 0
+        start_frame_time = 0
+
+    for frame_count, frame_time, frame in get_frames(video_path, start_frame_time):
+
         orig = frame.copy()  # clone the original frame (so we can save it later),
         frame = imutils.resize(frame, width=600)  # resize the frame
         mask = fgbg.apply(frame)  # apply the background subtractor
