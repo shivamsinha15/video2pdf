@@ -113,12 +113,9 @@ def detect_unique_screenshots(video_path, output_folder_screenshot_path, course_
     return
 
 
-def initialize_output_folder(video_path):
-    '''Clean the output folder if already exists'''
-    output_folder_screenshot_path = f"{OUTPUT_SLIDES_DIR}"
-
-    if os.path.exists(output_folder_screenshot_path):
-        shutil.rmtree(output_folder_screenshot_path)
+def initialize_output_folder(video_path, course_request_id):
+    '''Initialize the output folder if it does not exist'''
+    output_folder_screenshot_path = f"{OUTPUT_SLIDES_DIR}/{course_request_id}"
 
     os.makedirs(output_folder_screenshot_path, exist_ok=True)
     print('initialized output folder', output_folder_screenshot_path)
@@ -139,10 +136,6 @@ def convert_screenshots_to_pdf(output_folder_screenshot_path):
 
 if __name__ == "__main__":
 
-    #     video_path = "./input/Test Video 2.mp4"
-    #     choice = 'y'
-    #     output_folder_screenshot_path = initialize_output_folder(video_path)
-
     parser = argparse.ArgumentParser("video_path")
     parser.add_argument(
         "video_path", help="path of video to be converted to pdf slides", type=str)
@@ -153,18 +146,6 @@ if __name__ == "__main__":
     course_request_id = args.course_request_id
 
     print('video_path', video_path)
-    output_folder_screenshot_path = initialize_output_folder(video_path)
+    output_folder_screenshot_path = initialize_output_folder(video_path, course_request_id)
     detect_unique_screenshots(
         video_path, output_folder_screenshot_path, course_request_id)
-
-    print('Please Manually verify screenshots and delete duplicates')
-    while True:
-        choice = input("Press y to continue and n to terminate")
-        choice = choice.lower().strip()
-        if choice in ['y', 'n']:
-            break
-        else:
-            print('please enter a valid choice')
-
-    if choice == 'y':
-        convert_screenshots_to_pdf(output_folder_screenshot_path)
